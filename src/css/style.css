@@ -1,0 +1,42 @@
+@charset "UTF-8";
+*{margin: 0; padding: 0; user-select: none;}
+#canvas{position: fixed; left: 0; top: 0;}
+
+.toggle{display: block!important;}
+audio{display: none;}
+#alert{position: absolute; z-index: 500; background: #fff5; border: 2px #888 solid; border-radius: 9px; padding: 9px; color: #fff; left: 50%; top: 10%; transform: translate(-50%, -50%); pointer-events: none;}
+
+#controller{position: fixed; left: 0; top: 0; z-index: 1000; width: 400px; height: 300px; background: #fff5; display: none; border: 2px solid #fff; padding: 35px 15px 0; box-sizing: border-box;}
+#controller > input[type="file"]{display: none;}
+#controller > label, #controller> button{background: #fff7; border: #aaa 2px solid; padding: 2px 4px; outline: none; font-size: 14px; display: inline-block; height: 26px; box-sizing: border-box; margin-bottom: 5px;}
+
+#colorController{position: fixed; left: 400px; top: 0; z-index: 1100; width: 270px; height: 300px; background: #fff5; border: 2px solid #fff; padding: 30px 10px 0; box-sizing: border-box; display: none;}
+#colorController > label{width: 100%; display: block;}
+#colorController input[type="radio"]{margin: 0 5px 10px;}
+.colorController ~ p{opacity: 0.5;}
+.colorController:checked ~ p{opacity: 1;}
+#gradient ~ .gradient{opacity: 0.5; margin-left: 7px;}
+#gradient:checked ~ .gradient{opacity: 1;}
+#gradientCheckbox{display: inline;}
+#gradientLabel{display: inline-block; transform: translateY(4px);}
+#colorController input[type="number"]{width: 70px;}
+.moveBar{position: absolute; width: 100%; height: 20px; background: #ddd; left: 0; top: 0;}
+input[type="number"]{background: #fff7; outline: none; border: #aaa 2px solid;}
+input[type="radio"], input[type="checkbox"]{display: none;}
+.Label{display: block; width: 10px; height: 10px; background: #fff7; border: #aaa 2px solid; padding: 2px;}
+.Label::after{content: ""; display: none; width: 10px; height: 10px; background: #888;}
+input[type="radio"]:checked + .Label::after, input[type="checkbox"]:checked + .Label::after{display: block;}
+#reset{background: #fff7; border: #aaa 2px solid; padding: 2px 4px; outline: none; float: right; font-size: 14px; margin-top: -5px;}
+
+#musicList{width: 270px; height: 300px; background: #fff5; border: 2px solid #fff; position: absolute; z-index: 10; box-sizing: border-box; display: none; left: 670px; top: 0;}
+#scroll{margin-top: 20px;  height: 276px; overflow: auto;}
+#scroll::-webkit-scrollbar{display: none}
+.list{display: flex; flex-direction: column; position: relative;}
+.drag{width: 30px; height: 30px;}
+.item{display: flex; padding: 5px; align-items: center; border: 1px solid #888; color: #888; justify-content: space-between; width: 266px; height: 42px; box-sizing: border-box;}
+.musicData{font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 186px;}
+.delete{width: 30px; height: 30px; font-size: 30px; line-height: 23px; text-align: center;}
+
+.drag::before, .drag::after{content: ""; width: 25px; height: 3px; background: #888; margin-top: 8px; display: block;}
+.move{position: absolute; left: 0; top: 0;}
+/* .move + .item{margin-top: 42px;} */

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Music Visualizer</title>
+  <link rel="stylesheet" href="./src/css/style.css">
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <div id="controller">
+    <div id="controllerMoveBar" class="moveBar"></div>
+    <audio id="audio" controls></audio>
+    <input type="file" id="audioFile" accept="audio/*" multiple>
+    <label for="audioFile">Add Music</label>
+    <input type="file" id="lyricFile" accept=".txt" multiple><br>
+    <label for="lyricFile">Add Lyric</label><br>
+    <button id="backgroundColor">Background Color</button><br>
+    <button id="particleColor">Particle Color</button>
+  </div>
+  <div id="alert">tab to open a controller</div>
+  <div id="colorController">
+    <div id="colorControllerMoveBar" class="moveBar"></div>
+    <label for="hexC" id="hexColor">
+      <input type="radio" name="colorType" id="hexC" class="colorController"><label for="hexC" class="Label"></label>
+      <p>Color : <input type="color" id="hex" value="#666666"></p>
+    </label>
+    <label for="hslC" id="hslColor">
+      <input type="radio" name="colorType" id="hslC" checked class="colorController"><label for="hslC" class="Label"></label>
+      <p>Saturation : <input type="number" id="hslSaturation" min="0" max="100" value="100" placeholder="Stauration"></p>
+      <p>Lightness : <input type="number" id="hslLightness" min="0" max="100" value="75" placeholder="Lightness"></p>
+      <p>Conversion Speed : <input type="number" id="conversionSpeed" min="0" value="0.1" placeholder="ConversionSpeed" step="0.05"></p>
+      <p>Hue Step : <input type="number" id="hueStep" value="0" placeholder="ConversionStep"></p>
+      <p id="gradientCheckbox">Gradient : </p>
+      <input type="checkbox" id="gradient"><label for="gradient" class="Label" id="gradientLabel"></label>
+      <p class="gradient">Hue : <input type="number" id="hslGradientHue" min="0" max="360" value="180" placeholder="Hue"></p>
+      <p class="gradient">Saturation : <input type="number" id="hslGradientSaturation" min="0" max="100" value="100" placeholder="Saturation"></p>
+      <p class="gradient">Lightness : <input type="number" id="hslGradientLightness" min="0" max="100" value="75" placeholder="Lightness"></p>
+    </label>
+    <input type="button" value="reset" id="reset">
+  </div>
+  <div id="musicList">
+    <div id="musicListMoveBar" class="moveBar"></div>
+    <div id="scroll">
+      <ul class="list">
+      </ul>
+    </div>
+  </div>
+  <script src="./src/js/script.js"></script>
+</body>
+</html>
