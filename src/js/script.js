@@ -131,6 +131,7 @@ else particle.gradient.boolean = false;
 let particleList = new Array();
 let musicListMove = {idx: 0, mouseY: 0, target: ""};
 let interval;
+let shift = false;
 
 // svg
 let repeat = new Image();
@@ -375,14 +376,53 @@ function addEventListener() {
         }
       }
     }
-    if(key === "arrowleft") {
-      audio.currentTime -= 5;
-      if(audio.currentTime < 0) audio.currentTime = 0;
-      lyricsScrollFrom.move = true;
-    }
-    if(key === "arrowright") {
-      audio.currentTime += 5;
-      lyricsScrollFrom.move = true;
+    if(shift) {
+      if(key === "arrowleft") {
+        audioNum--;
+          if(audioNum < 0) {
+            audioNum = files.length - 1;
+            if(audioShuffle) {
+              audioShuffleList.sort(function(a, b) {
+                return Math.random() - 0.5;
+              })
+            }
+          }
+          audio.src = URL.createObjectURL(files[audioShuffleList[audioNum]]);
+          audio.load();
+          audioTitleX = 0;
+          audioTitleXTime = 0;
+          lyricsScroll = lyricsScrollFrom.scroll = 0;
+          if(audioPlaing) audio.play();
+          else audio.pause();
+      }
+      if(key === "arrowright") {
+        audioNum++;
+        if(audioNum >= files.length) {
+          audioNum = 0;
+          if(audioShuffle) {
+            audioShuffleList.sort(function(a, b) {
+              return Math.random() - 0.5;
+            })
+          }
+        }
+        audio.src = URL.createObjectURL(files[audioShuffleList[audioNum]]);
+        audio.load();
+        audioTitleX = 0;
+        audioTitleXTime = 0;
+        lyricsScroll = lyricsScrollFrom.scroll = 0;
+        if(audioPlaing) audio.play();
+        else audio.pause();
+      }
+    }else {
+      if(key === "arrowleft") {
+        audio.currentTime -= 5;
+        if(audio.currentTime < 0) audio.currentTime = 0;
+        lyricsScrollFrom.move = true;
+      }
+      if(key === "arrowright") {
+        audio.currentTime += 5;
+        lyricsScrollFrom.move = true;
+      }
     }
     if(key === "arrowdown") {
       if(audio.volume < 0.05) audio.volume = 0;
@@ -392,7 +432,17 @@ function addEventListener() {
       if(audio.volume > 0.95) audio.volume = 1;
       else audio.volume += 0.05;
     }
+    if(key === "shift") {
+      shift = true;
+    }
     localStorage.setItem("volume", audio.volume);
+  })
+
+  document.addEventListener("keyup", e => {
+    let key = e.key.toLowerCase();
+    if(key === "shift") {
+      shift = false;
+    }
   })
 
   document.addEventListener("mousedown", e => {
