@@ -378,7 +378,9 @@ function addEventListener() {
     }
     if(shift) {
       if(key === "arrowleft") {
-        audioNum--;
+        if(audio.currentTime > 3) audio.currentTime = 0;
+        else{
+          audioNum--;
           if(audioNum < 0) {
             audioNum = files.length - 1;
             if(audioShuffle) {
@@ -394,6 +396,7 @@ function addEventListener() {
           lyricsScroll = lyricsScrollFrom.scroll = 0;
           if(audioPlaing) audio.play();
           else audio.pause();
+        }
       }
       if(key === "arrowright") {
         audioNum++;
