@@ -432,6 +432,46 @@ function addEventListener() {
       if(audio.volume > 0.95) audio.volume = 1;
       else audio.volume += 0.05;
     }
+    if(key === "l") {
+      if(audioLoop) {
+        audioLoop = false;
+      }else {
+        audioLoop = true;
+      }
+      localStorage.setItem("loop", audioLoop);
+    }
+    if(key === "s") {
+      if(audioShuffle) {
+        audioShuffle = false;
+        if(audioShuffleList.length !== 0) audioNum = audioShuffleList[audioNum];
+        audioShuffleList.sort(function(a, b) {
+          return a - b;
+        })
+      }else {
+        audioShuffle = true;
+        audioShuffleList.sort(function(a, b) {
+          return Math.random() - 0.5;
+        })
+        audioShuffleList.sort(function(a, b) {
+          if(a === audioNum) return -1;
+          else return 0;
+        })
+        audioNum = 0;
+      }
+      localStorage.setItem("shuffle", audioShuffle);
+    }
+    if(key === "p") {
+      if(musicList.display && !controller.display && !hasClass($musicList, "toggle")) {
+        $musicList.classList.add("toggle");
+      }
+      else if(musicList.display) {
+        musicList.display = false;
+        $musicList.classList.remove("toggle");
+      }else {
+        musicList.display = true;
+        $musicList.classList.add("toggle");
+      }
+    }
     if(key === "shift") {
       shift = true;
     }
