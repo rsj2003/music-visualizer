@@ -16,6 +16,9 @@
     <label for="lyricsFile">Add Lyrics</label><br>
     <button id="backgroundColor">Background Color</button><br>
     <button id="particleColor">Particle Color</button>
+    <input type="file" id="backgroundImage" accept="image/*" multiple><br>
+    <label for="backgroundImage">Background Image</label><br>
+    <p>Transparency : <input type="range" id="backgroundAlpha" value="1" mine="0" max="1" step="0.05">  Cover : <input type="checkbox" id="backgroundCover"><label for="backgroundCover" class="Label checkLabel"></label></p>
   </div>
   <div id="alert">tab to open a controller</div>
   <div id="colorController">
@@ -31,7 +34,7 @@
       <p>Conversion Speed : <input type="number" id="conversionSpeed" min="0" value="0.1" placeholder="ConversionSpeed" step="0.05"></p>
       <p>Hue Step : <input type="number" id="hueStep" value="0" placeholder="ConversionStep"></p>
       <p id="gradientCheckbox">Gradient : </p>
-      <input type="checkbox" id="gradient"><label for="gradient" class="Label" id="gradientLabel"></label>
+      <input type="checkbox" id="gradient"><label for="gradient" class="Label checkLabel" id="gradientLabel"></label>
       <p class="gradient">Hue : <input type="number" id="hslGradientHue" min="0" max="360" value="180" placeholder="Hue"></p>
       <p class="gradient">Saturation : <input type="number" id="hslGradientSaturation" min="0" max="100" value="100" placeholder="Saturation"></p>
       <p class="gradient">Lightness : <input type="number" id="hslGradientLightness" min="0" max="100" value="75" placeholder="Lightness"></p>

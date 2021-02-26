@@ -18,7 +18,7 @@ audio{display: none;}
 #gradient ~ .gradient{opacity: 0.5; margin-left: 7px;}
 #gradient:checked ~ .gradient{opacity: 1;}
 #gradientCheckbox{display: inline;}
-#gradientLabel{display: inline-block; transform: translateY(4px);}
+.checkLabel{display: inline-block!important; transform: translateY(4px);}
 #colorController input[type="number"]{width: 70px;}
 .moveBar{position: absolute; width: 100%; height: 20px; background: #ddd; left: 0; top: 0;}
 input[type="number"]{background: #fff7; outline: none; border: #aaa 2px solid;}

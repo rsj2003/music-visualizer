@@ -14,8 +14,11 @@ const lyricsC = document.createElement("canvas");
 const lyrics = lyricsC.getContext("2d");
 const gradientC = document.createElement("canvas");
 const gCtx = gradientC.getContext("2d");
+const backgroundC = document.createElement("canvas");
+const bgCtx = backgroundC.getContext("2d");
 const audioFile = document.getElementById("audioFile");
 const lyricsFile = document.getElementById("lyricsFile");
+const backgroundImage = document.getElementById("backgroundImage");
 const audio = document.getElementById("audio");
 const $controller = document.getElementById("controller");
 const $controllerMoveBar = document.getElementById("controllerMoveBar");
@@ -34,6 +37,7 @@ const colorController = {x: 0, y: 0, move: false, type: "", display: false};
 const musicList = {x: 0, y: 0, move: false, type: "", display: false};
 const background = new Object();
 const particle = new Object();
+const bgImage = {img: new Image()};
 
 // input
 const $hexC = document.getElementById("hexC");
@@ -47,6 +51,8 @@ const $gradient = document.getElementById("gradient");
 const $hslGradientHue = document.getElementById("hslGradientHue");
 const $hslGradientSaturation = document.getElementById("hslGradientSaturation");
 const $hslGradientLightness = document.getElementById("hslGradientLightness");
+const $backgroundAlpha = document.getElementById("backgroundAlpha");
+const $backgroundCover = document.getElementById("backgroundCover");
 
 // audio animation
 let analyser;
@@ -75,7 +81,7 @@ let audioLyricsWidth = 0;
 let audioShuffle = localStorage.getItem("shuffle") ?? false;
 let audioShuffleList = new Array();
 let lyricsScroll = 0;
-let lyricsScrollFrom = 0;
+let lyricsScrollFrom = {scroll: 0, move: false};
 let playLyrics;
 let lyricsValue = false;
 
@@ -105,6 +111,12 @@ particle.hueStep = Number(localStorage.getItem("particleHueStep") ?? 90);
 particle.color = "";
 particle.colorTransA = "";
 particle.colorTransB = "";
+
+bgImage.type = localStorage.getItem("backgroundCover") ?? "cover";
+bgImage.alpha = Number(localStorage.getItem("backgroundAlpha") ?? 1);
+
+if(bgImage.type === "cover") $backgroundCover.checked = true;
+$backgroundAlpha.value = bgImage.alpha;
 
 if(audioLoop === "true") audioLoop = true;
 else audioLoop = false;
@@ -144,8 +156,8 @@ function init() {
   lyricsC.width = 480;
   lyricsC.height  = 85;
 
-  visualizerC.width = particleC.width = gradientC.width = WIDTH;
-  visualizerC.height = particleC.height = gradientC.height = HEIGHT;
+  visualizerC.width = particleC.width = gradientC.width = backgroundC.width = WIDTH;
+  visualizerC.height = particleC.height = gradientC.height = backgroundC.height = HEIGHT;
 
   gCtx.fillStyle = `hsl(${background.hue}, ${background.saturation}%, ${background.lightness}%)`;
   gCtx.fillRect(0, 0, WIDTH, HEIGHT);
@@ -190,7 +202,7 @@ function addEventListener() {
         
         audioTitleX = 0;
         audioTitleXTime = 0;
-        lyricsScroll = lyricsScrollFrom = 0;
+        lyricsScroll = lyricsScrollFrom.scroll = 0;
         
         if(!audioPlay) {
           audioCtx = new AudioContext();
@@ -246,11 +258,35 @@ function addEventListener() {
             arr.push(data);
           });
           
+          let l = 0;
+          lyricsFiles.forEach(f => {
+            if(f.title === lyricsFile.files[0].name.replace(/\.txt$/, "")) {
+              lyricsFiles.splice(l, 1)
+              l--;
+            };
+            l++;
+          })
+
           lyricsFiles.push({title: lyricsFile.files[0].name.replace(/\.txt$/, ""),lyrics: arr});
+          lyricsScrollFrom.move = true;
+          target.value = "";
         }
         reader.readAsText(lyricsFile.files[i], "UTF-8");
       }
       // console.log(lyricsFiles);
+    }
+    if(target === backgroundImage) {
+      let file = e.target.files[0];
+      if(!file.type.match("image/.*")) {
+        this.alert("이미지만 업로드 할 수 있습니다.");
+      }else {
+        var reader = new this.FileReader;
+        reader.onload = function(r) {
+          bgImage.img.setAttribute("src",r.target.result);
+          target.value = "";
+        }
+        reader.readAsDataURL(file);
+      }
     }
     let object;
     if(colorController.type === "background") object = background;
@@ -281,11 +317,11 @@ function addEventListener() {
         localStorage.setItem(`${colorController.type}Gradient`, object.gradient.boolean);
         break;
       case "conversionSpeed" :
-        object.conversion = Number(target.value);
+        object.conversion = Number(value);
         localStorage.setItem(`${colorController.type}Conversion`, object.conversion);
         break;
       case "hueStep" :
-        object.hueStep = Number(target.value);
+        object.hueStep = Number(value);
         localStorage.setItem(`${colorController.type}HueStep`, object.hueStep);
         break;
       case "hexC" :
@@ -299,6 +335,16 @@ function addEventListener() {
       case "hex" :
         object.hex = value;
         localStorage.setItem(`${colorController.type}Hex`, object.hex);
+        break;
+    }
+    switch(id) {
+      case "backgroundAlpha" :
+        bgImage.alpha = Number(value);
+        localStorage.setItem(`backgroundAlpha`, bgImage.alpha);
+        break;
+      case "backgroundCover" :
+        bgImage.type = target.checked ? "cover" : "fill";
+        localStorage.setItem(`backgroundCover`, bgImage.type);
         break;
     }
   })
@@ -332,9 +378,11 @@ function addEventListener() {
     if(key === "arrowleft") {
       audio.currentTime -= 5;
       if(audio.currentTime < 0) audio.currentTime = 0;
+      lyricsScrollFrom.move = true;
     }
     if(key === "arrowright") {
       audio.currentTime += 5;
+      lyricsScrollFrom.move = true;
     }
     if(key === "arrowdown") {
       if(audio.volume < 0.05) audio.volume = 0;
@@ -360,7 +408,7 @@ function addEventListener() {
         if(deg <= 270 ) {
           mouse.timeDown = true;
           audio.currentTime = audio.duration / 270  * deg;
-          lyricsScroll = lyricsScrollFrom;
+          lyricsScrollFrom.move = true;
         }
         if(deg >= 275 && deg <= 355) {
           mouse.volumeDown = true;
@@ -443,7 +491,7 @@ function addEventListener() {
       if(deg >= 275 && deg <= 355 && mouse.volumeDown) audio.volume = (1 / 80) * (355 - deg);
       if(deg >= 135 && deg < 275 && mouse.volumeDown) audio.volume = 1;
       if(deg < 135 && mouse.volumeDown) audio.volume = 0;
-      if(mouse.timeDown) lyricsScroll = lyricsScrollFrom;
+      if(mouse.timeDown) lyricsScrollFrom.move = true;
       localStorage.setItem("volume", audio.volume);
     }
     if(controller.move) {
@@ -461,7 +509,7 @@ function addEventListener() {
   })
 
   document.addEventListener("mouseup", e => {
-    if(mouse.timeDown) lyricsScroll = lyricsScrollFrom;
+    if(mouse.timeDown) lyricsScrollFrom.move = true;
     mouse.timeDown = false;
     mouse.volumeDown = false;
     if(mouse.click.x === e.clientX && mouse.click.y === e.clientY) {
@@ -549,7 +597,7 @@ function addEventListener() {
           audio.load();
           audioTitleX = 0;
           audioTitleXTime = 0;
-          lyricsScroll = lyricsScrollFrom = 0;
+          lyricsScroll = lyricsScrollFrom.scroll = 0;
           if(audioPlaing) audio.play();
           else audio.pause();
         }
@@ -568,12 +616,12 @@ function addEventListener() {
         audio.load();
         audioTitleX = 0;
         audioTitleXTime = 0;
-        lyricsScroll = lyricsScrollFrom = 0;
+        lyricsScroll = lyricsScrollFrom.scroll = 0;
         if(audioPlaing) audio.play();
         else audio.pause();
       }
       if(mouse.click.x >= WID - 240 && mouse.click.x <= WID + 240 && mouse.click.y >= HEI + 45 && mouse.click.y <= HEI + 130) {
-        lyricsScroll = lyricsScrollFrom;
+        lyricsScrollFrom.move = true;
       }
     }
     if(controller.move) {
@@ -598,7 +646,7 @@ function addEventListener() {
       audio.load();
       audioTitleX = 0;
       audioTitleXTime = 0;
-      lyricsScroll = lyricsScrollFrom = 0;
+      lyricsScroll = lyricsScrollFrom.scroll = 0;
       if(audioPlaing) audio.play();
       else audio.pause();
     }
@@ -754,7 +802,7 @@ function addEventListener() {
         audio.load();
         audioTitleX = 0;
         audioTitleXTime = 0;
-        lyricsScroll = lyricsScrollFrom = 0;
+        lyricsScroll = lyricsScrollFrom.scroll = 0;
         if(audioPlaing) audio.play();
       }else {
         if(audioNum > indexInParent(target.closest(".item"))) audioNum--;
@@ -797,7 +845,7 @@ function addEventListener() {
       audio.load();
       audioTitleX = 0;
       audioTitleXTime = 0;
-      lyricsScroll = lyricsScrollFrom = 0;
+      lyricsScroll = lyricsScrollFrom.scroll = 0;
       audio.play();
     }
   })
@@ -823,7 +871,7 @@ function addEventListener() {
         if(audioPlaing) audio.play();
         audioTitleX = 0;
         audioTitleXTime = 0;
-        lyricsScroll = lyricsScrollFrom = 0;
+        lyricsScroll = lyricsScrollFrom.scroll = 0;
       }else {
         audioNum++;
         if(audioNum >= files.length) {
@@ -839,7 +887,7 @@ function addEventListener() {
         audioPlaing = false;
         audioTitleX = 0;
         audioTitleXTime = 0;
-        lyricsScroll = lyricsScrollFrom = 0;
+        lyricsScroll = lyricsScrollFrom.scroll = 0;
       }
     }
   })
@@ -895,14 +943,11 @@ function audioAnimate() {
   WID = WIDTH / 2;
   HEI = HEIGHT / 2;
 
-  visualizerC.width = particleC.width = gradientC.width = WIDTH;
-  visualizerC.height = particleC.height = gradientC.height = HEIGHT;
+  visualizerC.width = particleC.width = gradientC.width = backgroundC.width = WIDTH;
+  visualizerC.height = particleC.height = gradientC.height = backgroundC.height = HEIGHT;
 
   if(files.length > 0) {
     audioTitle = files[audioShuffleList[audioNum]].name.replace(/\.mp3|\.ogg|\.wav$/, "");
-    // audioTitle = audioTitle.split(".");
-    // audioTitle.splice(audioTitle.length - 1, 1);
-    // audioTitle = audioTitle.join(".");
   }else {
     audioTitle = "Unselected";
   }
@@ -929,7 +974,36 @@ function audioAnimate() {
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
   vCtx.translate(WIDTH / 2, HEIGHT / 2);
   vCtx.rotate(180 * Math.PI / 180);
-  
+
+  if(bgImage.img.src !== "") {
+    let bgWidth = bgImage.img.width;
+    let bgHeight = bgImage.img.height;
+    let w = bgWidth / backgroundC.width;
+    let h = bgHeight / backgroundC.height;
+    if(bgImage.type === "cover") {
+      if(w < h) {
+        bgHeight *= backgroundC.width / bgWidth;
+        bgWidth = backgroundC.width;
+      }else {
+        bgWidth *= backgroundC.height / bgHeight;
+        bgHeight = backgroundC.height;
+      }
+    }else {
+      if(w > h) {
+        bgHeight *= backgroundC.width / bgWidth;
+        bgWidth = backgroundC.width;
+      }else {
+        bgWidth *= backgroundC.height / bgHeight;
+        bgHeight = backgroundC.height;
+      }
+    }
+    bgCtx.fillStyle = `rgba(0, 0, 0, ${bgImage.alpha})`;
+    bgCtx.fillRect(0, 0, backgroundC.width, backgroundC.height);
+    bgCtx.globalCompositeOperation = "source-in";
+    bgCtx.drawImage(bgImage.img, WID - (bgWidth / 2), HEI - (bgHeight / 2), bgWidth, bgHeight);
+    bgCtx.globalCompositeOperation = "source-over";
+    ctx.drawImage(backgroundC, 0, 0);
+  }
   
   if(particle.type === "hsl") {
     if(particle.gradient.boolean) {
@@ -1126,8 +1200,8 @@ function audioAnimate() {
         if(audio.currentTime >= t.time && audio.currentTime < lyricsFiles[lyricsValue].lyrics[i + 1].time) {
           lyrics.fillStyle = particle.color;
           if(playLyrics !== i) {
-            lyricsScrollFrom = i * -47;
-            if(lyricsScrollFrom - 30 < lyricsScroll && lyricsScrollFrom + 100 > lyricsScroll)lyricsScroll = lyricsScrollFrom;
+            lyricsScrollFrom.scroll = i * -47;
+            if(lyricsScrollFrom.scroll - 30 < lyricsScroll && lyricsScrollFrom.scroll + 100 > lyricsScroll) lyricsScroll = lyricsScrollFrom.scroll;
             playLyrics = i;
           }
         }else {
@@ -1136,17 +1210,22 @@ function audioAnimate() {
       }else if(audio.currentTime >= t.time) {
         lyrics.fillStyle = particle.color;
         if(playLyrics !== i) {
-          lyricsScrollFrom = i * -47;
-          if(lyricsScrollFrom - 30 < lyricsScroll && lyricsScrollFrom + 100 > lyricsScroll)lyricsScroll = lyricsScrollFrom;
+          lyricsScrollFrom.scroll = i * -47;
+          if(lyricsScrollFrom.scroll - 30 < lyricsScroll && lyricsScrollFrom.scroll + 100 > lyricsScroll) lyricsScroll = lyricsScrollFrom.scroll;
           playLyrics = i;
         }
       }else {
         lyrics.fillStyle = particle.colorTransB;
       }
+      if(lyricsScrollFrom.move) lyricsScroll = lyricsScrollFrom.scroll;
       audioLyricsWidth = lyrics.measureText(t.lyrics).width / 2;
       // lyrics.fillText(t.lyrics, lyricsC.width / 2 - audioLyricsWidth, lyricsScroll + (i * 47) + 23);
       lyrics.fillText(t.lyrics, lyricsC.width / 2, lyricsScroll + (i * 47) + 23, lyricsC.width);
     })
+    if(lyricsScrollFrom.move) {
+      lyricsScroll = lyricsScrollFrom.scroll;
+      lyricsScrollFrom.move = false;
+    }
   }
 
   pCtx.strokeStyle = particle.colorTransB;
