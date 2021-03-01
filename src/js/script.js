@@ -610,9 +610,9 @@ function addEventListener() {
       $musicList.style.left = `${mouse.x - musicList.x}px`;
       $musicList.style.top = `${mouse.y - musicList.y}px`;
     }
-    if(mouse.down) {
-      let x = mouse.x + Math.random() * 10 - 5;
-      let y = mouse.y + Math.random() * 10 - 5;
+    if(mouse.down && Math.random() > 0.9) {
+      let x = mouse.x + Math.random() * 20 - 10;
+      let y = mouse.y + Math.random() * 20 - 10;
       let size = Math.random() * 5 + 2;
       particleList.push({size: size, x: x, y: y, step: Math.random() * 360, alpha: 1});
     }
