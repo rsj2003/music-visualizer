@@ -31,7 +31,7 @@ const $list = document.querySelector("#scroll>.list");
 const $alert = document.getElementById("alert");
 const $backgroundColor = document.getElementById("backgroundColor");
 const $particleColor = document.getElementById("particleColor");
-const mouse = {x: 0, y: 0, oldX: 0, oldY: 0, timeDown: false, volumeDown: false, click: false};
+const mouse = {x: 0, y: 0, oldX: 0, oldY: 0, timeDown: false, volumeDown: false, click: false, down: false};
 const controller = {x: 0, y: 0, move: false, display: false};
 const colorController = {x: 0, y: 0, move: false, type: "", display: false};
 const musicList = {x: 0, y: 0, move: false, type: "", display: false};
@@ -516,6 +516,8 @@ function addEventListener() {
           mouse.volumeDown = true;
           audio.volume = (1 / 80) * (355 - deg);
         }
+      }else{
+        mouse.down = true;
       }
     }
     if(target === $controllerMoveBar) {
@@ -608,12 +610,19 @@ function addEventListener() {
       $musicList.style.left = `${mouse.x - musicList.x}px`;
       $musicList.style.top = `${mouse.y - musicList.y}px`;
     }
+    if(mouse.down) {
+      let x = mouse.x + Math.random() * 10 - 5;
+      let y = mouse.y + Math.random() * 10 - 5;
+      let size = Math.random() * 5 + 2;
+      particleList.push({size: size, x: x, y: y, step: Math.random() * 360, alpha: 1});
+    }
   })
 
   document.addEventListener("mouseup", e => {
     if(mouse.timeDown) lyricsScrollFrom.move = true;
     mouse.timeDown = false;
     mouse.volumeDown = false;
+    mouse.down = false;
     if(mouse.click.x === e.clientX && mouse.click.y === e.clientY) {
       let r = Math.sqrt(((mouse.click.x - WID) * (mouse.click.x - WID)) + ((mouse.click.y - HEI - 165) * (mouse.click.y - HEI - 165)));
       if(r <= 35) {
@@ -1343,11 +1352,6 @@ function audioAnimate() {
         }
       }else if(audio.currentTime >= t.time) {
         lyrics.fillStyle = particle.color;
-        // if(playLyrics !== i) {
-        //   lyricsScrollFrom.scroll = - lyricsScrollFrom.size;
-        //   if(lyricsScrollFrom.scroll - 50 < lyricsScroll && lyricsScrollFrom.scroll + 110 > lyricsScroll) lyricsScroll = lyricsScrollFrom.scroll;
-        //   playLyrics = i;
-        // }
         if(playLyrics !== i && t.time !== lyricsFiles[lyricsValue].lyrics[i - 1].time) {
           lyricsScrollFrom.scroll = - lyricsScrollFrom.size;
           if(lyricsScrollFrom.scroll - 50 < lyricsScroll && lyricsScrollFrom.his + 110 > lyricsScroll) lyricsScroll = lyricsScrollFrom.scroll;
