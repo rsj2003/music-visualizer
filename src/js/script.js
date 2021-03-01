@@ -53,6 +53,7 @@ const $hslGradientSaturation = document.getElementById("hslGradientSaturation");
 const $hslGradientLightness = document.getElementById("hslGradientLightness");
 const $backgroundAlpha = document.getElementById("backgroundAlpha");
 const $backgroundCover = document.getElementById("backgroundCover");
+const $playtimeDecimal = document.getElementById("playtimeDecimal");
 
 // audio animation
 let analyser;
@@ -81,9 +82,10 @@ let audioLyricsWidth = 0;
 let audioShuffle = localStorage.getItem("shuffle") ?? false;
 let audioShuffleList = new Array();
 let lyricsScroll = 0;
-let lyricsScrollFrom = {scroll: 0, move: false};
+let lyricsScrollFrom = {scroll: 0, move: false, size: 0, his: 0};
 let playLyrics;
 let lyricsValue = false;
+let playtimeDecimal = localStorage.getItem("playtimeDecimal") ?? false;
 
 background.hue = 0;
 background.type = localStorage.getItem("backgroundType") ?? "hsl";
@@ -115,13 +117,18 @@ particle.colorTransB = "";
 bgImage.type = localStorage.getItem("backgroundCover") ?? "cover";
 bgImage.alpha = Number(localStorage.getItem("backgroundAlpha") ?? 1);
 
-if(bgImage.type === "cover") $backgroundCover.checked = true;
-$backgroundAlpha.value = bgImage.alpha;
 
 if(audioLoop === "true") audioLoop = true;
 else audioLoop = false;
 if(audioShuffle === "true") audioShuffle = true;
 else audioShuffle = false;
+if(playtimeDecimal === "true") playtimeDecimal = true;
+else playtimeDecimal = false;
+
+if(bgImage.type === "cover") $backgroundCover.checked = true;
+$backgroundAlpha.value = bgImage.alpha;
+
+$playtimeDecimal.checked = playtimeDecimal;
 
 if(background.gradient.boolean === "true") background.gradient.boolean = true;
 else background.gradient.boolean = false;
@@ -235,7 +242,6 @@ function addEventListener() {
         </li>`;
       })
       $list.style.height = `${$list.childNodes.length * 42}px`;
-      audioFile.value = ""
     }
     if(target === lyricsFile && lyricsFile.value !== "") {
       for(let i = 0; i < lyricsFile.files.length; i++) {
@@ -261,20 +267,19 @@ function addEventListener() {
           
           let l = 0;
           lyricsFiles.forEach(f => {
-            if(f.title === lyricsFile.files[0].name.replace(/\.txt$/, "")) {
+            if(f.title === lyricsFile.files[i].name.replace(/\.txt$/, "")) {
               lyricsFiles.splice(l, 1)
               l--;
             };
             l++;
           })
 
-          lyricsFiles.push({title: lyricsFile.files[0].name.replace(/\.txt$/, ""),lyrics: arr});
+          lyricsFiles.push({title: lyricsFile.files[i].name.replace(/\.txt$/, ""),lyrics: arr});
           lyricsScrollFrom.move = true;
-          target.value = "";
         }
         reader.readAsText(lyricsFile.files[i], "UTF-8");
       }
-      // console.log(lyricsFiles);
+      // setTimeout(e => target.value = "", lyricsFile.files.length);
     }
     if(target === backgroundImage) {
       let file = e.target.files[0];
@@ -347,6 +352,10 @@ function addEventListener() {
         bgImage.type = target.checked ? "cover" : "fill";
         localStorage.setItem(`backgroundCover`, bgImage.type);
         break;
+      case "playtimeDecimal" :
+        playtimeDecimal = target.checked;
+        localStorage.setItem(`playtimeDecimal`, playtimeDecimal);
+        break;
     }
   })
 
@@ -393,10 +402,10 @@ function addEventListener() {
           audio.load();
           audioTitleX = 0;
           audioTitleXTime = 0;
-          lyricsScroll = lyricsScrollFrom.scroll = 0;
           if(audioPlaing) audio.play();
           else audio.pause();
         }
+        lyricsScroll = lyricsScrollFrom.scroll = 0;
       }
       if(key === "arrowright") {
         audioNum++;
@@ -690,10 +699,10 @@ function addEventListener() {
           audio.load();
           audioTitleX = 0;
           audioTitleXTime = 0;
-          lyricsScroll = lyricsScrollFrom.scroll = 0;
           if(audioPlaing) audio.play();
           else audio.pause();
         }
+        lyricsScroll = lyricsScrollFrom.scroll = 0;
       }
       if(mouse.click.x >= WID + 40 && mouse.click.x <= WID + 120 && mouse.click.y >= HEI + 135 && mouse.click.y <= HEI + 195) {
         audioNum++;
@@ -791,6 +800,12 @@ function addEventListener() {
   document.addEventListener("click", e => {
     let target = e.target;
     let object = "";
+    if(target === audioFile) {
+      audioFile.value = ""
+    }
+    if(target === lyricsFile) {
+      lyricsFile.value = "";
+    }
     if(target === $backgroundColor) {
       if(colorController.display && colorController.type === "background") {
         $colorController.classList.remove("toggle");
@@ -990,9 +1005,12 @@ function addEventListener() {
       if(e.wheelDelta > 0) lyricsScroll += 10;
       else lyricsScroll -= 10;
       if(lyricsScroll > 0) lyricsScroll = 0;
-      if(lyricsScroll < (lyricsFiles[lyricsValue].lyrics.length - 1) * -47) {
-        lyricsScroll = (lyricsFiles[lyricsValue].lyrics.length - 1) * -47;
+      if(lyricsScroll < - lyricsScrollFrom.size + 47) {
+        lyricsScroll = - lyricsScrollFrom.size + 47;
       }
+      // if(lyricsScroll < (lyricsFiles[lyricsValue].lyrics.length - 1) * -47) {
+      //   lyricsScroll = (lyricsFiles[lyricsValue].lyrics.length - 1) * -47;
+      // }
     }
   })
 }
@@ -1002,31 +1020,39 @@ function audioAnimate() {
   let barHeight;
   let deg = 360 / bufferLength / 2;
   let avr = 0;
-  let durationS = Math.floor(audio.duration) || 0;
+  let durationS = audio.duration   || 0.00;
   let durationM = 0;
   let durationH = 0;
-  let currentS = Math.floor(audio.currentTime) || 0;
+  let currentS = audio.currentTime || 0.00;
   let currentM = 0;
   let currentH = 0;
 
   if(currentS > durationS) currentS = durationS;
 
-  if(durationS > 60) {
+  if(durationS >= 60) {
     durationM = Math.floor(durationS / 60);
     durationS = durationS % 60;
   }
-  if(durationM > 60) {
+  if(durationM >= 60) {
     durationH = Math.floor(durationM / 60);
     durationM = durationM % 60;
   }
 
-  if(currentS > 60) {
+  if(currentS >= 60) {
     currentM = Math.floor(currentS / 60);
     currentS = currentS % 60;
   }
-  if(currentM > 60) {
+  if(currentM >= 60) {
     currentH = Math.floor(currentM / 60);
     currentM = currentM % 60;
+  }
+
+  if(playtimeDecimal) {
+    durationS = durationS.toFixed(2);
+    currentS = currentS.toFixed(2);
+  }else {
+    durationS = Math.floor(durationS);
+    currentS = Math.floor(currentS);
   }
 
   canvasC.width = window.innerWidth;
@@ -1263,8 +1289,9 @@ function audioAnimate() {
   else if(audioTitleX >= audioTitleWidth - 500 && audioTitleXTime > 0) audioTitleXTime--;
   else if(audioTitleX >= audioTitleWidth - 500 && audioTitleXTime <= 0) audioTitleX = 0;
   title.fillText(audioTitle,  - audioTitleX, 65);
-
-  let timeText = `${fillZero(currentM, 2)}:${fillZero(currentS, 2)} / ${fillZero(durationM, 2)}:${fillZero(durationS, 2)}`;
+  let timeText;
+  if (playtimeDecimal) timeText = `${fillZero(currentM, 2)}:${fillZero(currentS, 5)} / ${fillZero(durationM, 2)}:${fillZero(durationS, 5)}`;
+  else timeText = `${fillZero(currentM, 2)}:${fillZero(currentS, 2)} / ${fillZero(durationM, 2)}:${fillZero(durationS, 2)}`;
   if(durationH > 0) {
     timeText = `${fillZero(currentH, 2)}:${fillZero(currentM, 2)}:${fillZero(currentS, 2)} / ${fillZero(durationH, 2)}:${fillZero(durationM, 2)}:${fillZero(durationS, 2)}`;
   }
@@ -1272,7 +1299,8 @@ function audioAnimate() {
   timeC.width = time.measureText(timeText).width;
   time.font = "45px Comic Sans MS";
   time.fillStyle = particle.color;
-  time.fillText(timeText, 0, 65);
+  time.fillText(timeText, 0, 65, 480);
+  
 
   lyricsValue = false;
 
@@ -1280,6 +1308,7 @@ function audioAnimate() {
     if(e.title === audioTitle) lyricsValue = i;
   })
 
+  lyricsScrollFrom.size = 0;
   lyrics.clearRect(0, 0, lyricsC.width, lyricsC.height);
   if(lyricsValue !== false) {
     // lyrics.fillStyle = "#fff3";
@@ -1290,22 +1319,40 @@ function audioAnimate() {
     lyrics.fillStyle = particle.colorTransB;
     lyricsFiles[lyricsValue].lyrics.forEach((t, i) => {
       if(lyricsFiles[lyricsValue].lyrics.length - 1 > i) {
-        if(audio.currentTime >= t.time && audio.currentTime < lyricsFiles[lyricsValue].lyrics[i + 1].time) {
+        let nextTime = lyricsFiles[lyricsValue].lyrics[i + 1].time;
+        let nextIdx = 1;
+        while(nextTime === t.time && lyricsFiles[lyricsValue].lyrics.length > i + nextIdx) {
+          nextIdx++;
+          if(typeof(lyricsFiles[lyricsValue].lyrics[i + nextIdx]) === "undefined") {
+            nextTime = audio.duration;
+            console.log(i + nextIdx);
+          }else {
+            nextTime = lyricsFiles[lyricsValue].lyrics[i + nextIdx].time;
+          }
+        }
+        if(audio.currentTime >= t.time && audio.currentTime < nextTime) {
           lyrics.fillStyle = particle.color;
-          if(playLyrics !== i) {
-            lyricsScrollFrom.scroll = i * -47;
-            if(lyricsScrollFrom.scroll - 30 < lyricsScroll && lyricsScrollFrom.scroll + 100 > lyricsScroll) lyricsScroll = lyricsScrollFrom.scroll;
+          if(playLyrics !== i && (i === 0 || t.time !== lyricsFiles[lyricsValue].lyrics[i - 1].time)) {
+            lyricsScrollFrom.scroll = - lyricsScrollFrom.size;
+            if(lyricsScrollFrom.scroll - 50 - ((nextIdx - 1) * 23) < lyricsScroll && lyricsScrollFrom.his + 110 > lyricsScroll) lyricsScroll = lyricsScrollFrom.scroll;
             playLyrics = i;
+            lyricsScrollFrom.his = lyricsScrollFrom.scroll;
           }
         }else {
           lyrics.fillStyle = particle.colorTransB;
         }
       }else if(audio.currentTime >= t.time) {
         lyrics.fillStyle = particle.color;
-        if(playLyrics !== i) {
-          lyricsScrollFrom.scroll = i * -47;
-          if(lyricsScrollFrom.scroll - 30 < lyricsScroll && lyricsScrollFrom.scroll + 100 > lyricsScroll) lyricsScroll = lyricsScrollFrom.scroll;
+        // if(playLyrics !== i) {
+        //   lyricsScrollFrom.scroll = - lyricsScrollFrom.size;
+        //   if(lyricsScrollFrom.scroll - 50 < lyricsScroll && lyricsScrollFrom.scroll + 110 > lyricsScroll) lyricsScroll = lyricsScrollFrom.scroll;
+        //   playLyrics = i;
+        // }
+        if(playLyrics !== i && t.time !== lyricsFiles[lyricsValue].lyrics[i - 1].time) {
+          lyricsScrollFrom.scroll = - lyricsScrollFrom.size;
+          if(lyricsScrollFrom.scroll - 50 < lyricsScroll && lyricsScrollFrom.his + 110 > lyricsScroll) lyricsScroll = lyricsScrollFrom.scroll;
           playLyrics = i;
+          lyricsScrollFrom.his = lyricsScrollFrom.scroll;
         }
       }else {
         lyrics.fillStyle = particle.colorTransB;
@@ -1313,7 +1360,11 @@ function audioAnimate() {
       if(lyricsScrollFrom.move) lyricsScroll = lyricsScrollFrom.scroll;
       audioLyricsWidth = lyrics.measureText(t.lyrics).width / 2;
       // lyrics.fillText(t.lyrics, lyricsC.width / 2 - audioLyricsWidth, lyricsScroll + (i * 47) + 23);
-      lyrics.fillText(t.lyrics, lyricsC.width / 2, lyricsScroll + (i * 47) + 23, lyricsC.width);
+      lyrics.fillText(t.lyrics, lyricsC.width / 2, lyricsScroll + lyricsScrollFrom.size + 23, lyricsC.width);
+      if(lyricsFiles[lyricsValue].lyrics.length - 1 > i) {
+        if(t.time === lyricsFiles[lyricsValue].lyrics[i + 1].time) lyricsScrollFrom.size += 23;
+        else lyricsScrollFrom.size += 47;
+      }else lyricsScrollFrom.size += 47;
     })
     if(lyricsScrollFrom.move) {
       lyricsScroll = lyricsScrollFrom.scroll;
@@ -1349,7 +1400,8 @@ function audioAnimate() {
     gCtx.drawImage(titleC, WID - audioTitleWidth / 2, HEI - titleC.height / 2);
   }
   gCtx.drawImage(lyricsC, WID - lyricsC.width / 2, HEI + 45);
-  gCtx.drawImage(timeC, WID - timeC.width / 2, HEI - 160);
+  if(timeC.width < 490) gCtx.drawImage(timeC, WID - timeC.width / 2, HEI - 160);
+  else gCtx.drawImage(timeC, WID - 480 / 2, HEI - 160);
   if(particle.type === "hsl" && particle.gradient.boolean) {
     gCtx.globalCompositeOperation = "source-in";
     gCtx.fillStyle = particle.color;
