@@ -9,12 +9,12 @@ const svg = svgC.getContext("2d");
 const titleC = document.createElement("canvas");
 const title = titleC.getContext("2d");
 const timeC = document.createElement("canvas");
-const time = timeC.getContext("2d");
 const lyricsC = document.createElement("canvas");
-const lyrics = lyricsC.getContext("2d");
 const gradientC = document.createElement("canvas");
-const gCtx = gradientC.getContext("2d");
 const backgroundC = document.createElement("canvas");
+const time = timeC.getContext("2d");
+const lyrics = lyricsC.getContext("2d");
+const gCtx = gradientC.getContext("2d");
 const bgCtx = backgroundC.getContext("2d");
 const audioFile = document.getElementById("audioFile");
 const lyricsFile = document.getElementById("lyricsFile");
@@ -31,7 +31,7 @@ const $list = document.querySelector("#scroll>.list");
 const $alert = document.getElementById("alert");
 const $backgroundColor = document.getElementById("backgroundColor");
 const $particleColor = document.getElementById("particleColor");
-const mouse = {x: 0, y: 0, oldX: 0, oldY: 0, timeDown: false, volumeDown: false, click: false, down: false};
+const mouse = {x: 0, y: 0, oldX: 0, oldY: 0, timeDown: false, volumeDown: false, click: false, down: false, lyricsDown: false};
 const controller = {x: 0, y: 0, move: false, display: false};
 const colorController = {x: 0, y: 0, move: false, type: "", display: false};
 const musicList = {x: 0, y: 0, move: false, type: "", display: false};
@@ -83,6 +83,7 @@ let audioShuffle = localStorage.getItem("shuffle") ?? false;
 let audioShuffleList = new Array();
 let lyricsScroll = 0;
 let lyricsScrollFrom = {scroll: 0, move: false, size: 0, his: 0};
+let lyricsScrollMove = 0;
 let playLyrics;
 let lyricsValue = false;
 let playtimeDecimal = localStorage.getItem("playtimeDecimal") ?? false;
@@ -262,7 +263,7 @@ function addEventListener() {
             }
             data.lyrics = data.lyrics.replace(/(^\s*)|(\s*$)/, "");
             delete data.text;
-            arr.push(data);
+            if(data.lyrics !== "") arr.push(data);
           });
           
           let l = 0;
@@ -281,17 +282,13 @@ function addEventListener() {
       }
       // setTimeout(e => target.value = "", lyricsFile.files.length);
     }
+
     if(target === backgroundImage) {
       let file = e.target.files[0];
       if(!file.type.match("image/.*")) {
         this.alert("이미지만 업로드 할 수 있습니다.");
       }else {
-        var reader = new this.FileReader;
-        reader.onload = function(r) {
-          bgImage.img.setAttribute("src",r.target.result);
-          target.value = "";
-        }
-        reader.readAsDataURL(file);
+        bgImage.img.src = URL.createObjectURL(file);
       }
     }
     let object;
@@ -498,9 +495,13 @@ function addEventListener() {
   })
 
   document.addEventListener("mousedown", e => {
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
-    mouse.click = {x: mouse.x, y: mouse.y};
+    e.preventDefault();
+    if(e.button !== 0) {
+      return false;
+    };
+    mouse.x = mouse.oldX = e.clientX;
+    mouse.y = mouse.oldY = e.clientY;
+    mouse.click = true;
     let target = e.target;
     let r = Math.sqrt(((mouse.x - WID) * (mouse.x - WID)) + ((mouse.y - HEI) * (mouse.y - HEI)));
     if(target === canvasC) {
@@ -516,9 +517,8 @@ function addEventListener() {
           mouse.volumeDown = true;
           audio.volume = (1 / 80) * (355 - deg);
         }
-      }else{
-        mouse.down = true;
-      }
+      }else if(mouse.x > WID - lyricsC.width / 2 && mouse.y > HEI + 45 && mouse.x < WID + lyricsC.width && mouse.y < HEI + 45 + lyricsC.height) mouse.lyricsDown = lyricsScroll;
+      mouse.down = true;
     }
     if(target === $controllerMoveBar) {
       controller.move = true;
@@ -546,7 +546,7 @@ function addEventListener() {
       // if(musicListMove.idx === $list.childNodes.length - 1) $list.childNodes[$list.childNodes.length - 2].style.marginBottom = '42px';
       if(musicListMove.idx < $list.childNodes.length - 1) $list.childNodes[musicListMove.idx + 1].style.transform = 'translateY(42px)';
       musicListMove.target.classList.add("move");
-      console.log(musicListMove);
+      // console.log(musicListMove);
       $list.childNodes.forEach((e, i) => {
         if(e !== musicListMove.target) {
           // e.classList.add("ready");
@@ -586,6 +586,7 @@ function addEventListener() {
   document.addEventListener("mousemove", e => {
     mouse.x = e.clientX;
     mouse.y = e.clientY;
+    mouse.click = false;
     if(mouse.timeDown || mouse.volumeDown) {
       let deg = Math.atan2(mouse.y - HEI, mouse.x - WID) * 180 / Math.PI;
       if(deg < 0) deg = 180 + (180 + deg);
@@ -597,6 +598,15 @@ function addEventListener() {
       if(deg < 135 && mouse.volumeDown) audio.volume = 0;
       if(mouse.timeDown) lyricsScrollFrom.move = true;
       localStorage.setItem("volume", audio.volume);
+    }
+    if(mouse.lyricsDown !== false) {
+      lyricsScroll = mouse.lyricsDown + mouse.y - mouse.oldY;
+      mouse.lyricsDown = lyricsScroll;
+      setTimeout(e => {mouse.oldY = mouse.y;});
+      if(lyricsScroll > 0) lyricsScroll = 0;
+      if(lyricsScroll < - lyricsScrollFrom.size + 47) {
+        lyricsScroll = - lyricsScrollFrom.size + 47;
+      }
     }
     if(controller.move) {
       $controller.style.left = `${mouse.x - controller.x}px`;
@@ -623,8 +633,14 @@ function addEventListener() {
     mouse.timeDown = false;
     mouse.volumeDown = false;
     mouse.down = false;
-    if(mouse.click.x === e.clientX && mouse.click.y === e.clientY) {
-      let r = Math.sqrt(((mouse.click.x - WID) * (mouse.click.x - WID)) + ((mouse.click.y - HEI - 165) * (mouse.click.y - HEI - 165)));
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+    if(mouse.lyricsDown !== false) {
+      lyricsScrollMove = mouse.y - mouse.oldY;
+    }
+    mouse.lyricsDown = false;
+    if(mouse.click) {
+      let r = Math.sqrt(((mouse.x - WID) * (mouse.x - WID)) + ((mouse.y - HEI - 165) * (mouse.y - HEI - 165)));
       if(r <= 35) {
         if(audioPlaing) {
           audioPlaing = false;
@@ -636,7 +652,7 @@ function addEventListener() {
           }
         }
       }
-      r = Math.sqrt(((mouse.click.x - WID - 70) * (mouse.click.x - WID - 70)) + ((mouse.click.y - HEI - 225) * (mouse.click.y - HEI - 225)));
+      r = Math.sqrt(((mouse.x - WID - 70) * (mouse.x - WID - 70)) + ((mouse.y - HEI - 225) * (mouse.y - HEI - 225)));
       if(r <= 25) {
         if(audioLoop) {
           audioLoop = false;
@@ -645,7 +661,7 @@ function addEventListener() {
         }
         localStorage.setItem("loop", audioLoop);
       }
-      r = Math.sqrt(((mouse.click.x - WID + 70) * (mouse.click.x - WID + 70)) + ((mouse.click.y - HEI - 225) * (mouse.click.y - HEI - 225)));
+      r = Math.sqrt(((mouse.x - WID + 70) * (mouse.x - WID + 70)) + ((mouse.y - HEI - 225) * (mouse.y - HEI - 225)));
       if(r <= 25) {
         if(audioShuffle) {
           audioShuffle = false;
@@ -666,7 +682,7 @@ function addEventListener() {
         }
         localStorage.setItem("shuffle", audioShuffle);
       }
-      r = Math.sqrt(((mouse.click.x - WID) * (mouse.click.x - WID)) + ((mouse.click.y - HEI - 225) * (mouse.click.y - HEI - 225)));
+      r = Math.sqrt(((mouse.x - WID) * (mouse.x - WID)) + ((mouse.y - HEI - 225) * (mouse.y - HEI - 225)));
       if(r <= 25) {
         if(musicList.display && !controller.display && !hasClass($musicList, "toggle")) {
           $musicList.classList.add("toggle");
@@ -679,7 +695,7 @@ function addEventListener() {
           $musicList.classList.add("toggle");
         }
       }
-      r = Math.sqrt(((mouse.click.x - WID) * (mouse.click.x - WID)) + ((mouse.click.y - HEI + 200) * (mouse.click.y - HEI + 200)));
+      r = Math.sqrt(((mouse.x - WID) * (mouse.x - WID)) + ((mouse.y - HEI + 200) * (mouse.y - HEI + 200)));
       if(r <= 30) {
         e.preventDefault();
         $controller.classList.toggle("toggle");
@@ -692,7 +708,7 @@ function addEventListener() {
           if(musicList.display) $musicList.classList.add("toggle");
         }
       }
-      if(mouse.click.x >= WID - 120 && mouse.click.x <= WID - 40 && mouse.click.y >= HEI + 135 && mouse.click.y <= HEI + 195) {
+      if(mouse.x >= WID - 120 && mouse.x <= WID - 40 && mouse.y >= HEI + 135 && mouse.y <= HEI + 195) {
         if(audio.currentTime > 3) audio.currentTime = 0;
         else{
           audioNum--;
@@ -713,7 +729,7 @@ function addEventListener() {
         }
         lyricsScroll = lyricsScrollFrom.scroll = 0;
       }
-      if(mouse.click.x >= WID + 40 && mouse.click.x <= WID + 120 && mouse.click.y >= HEI + 135 && mouse.click.y <= HEI + 195) {
+      if(mouse.x >= WID + 40 && mouse.x <= WID + 120 && mouse.y >= HEI + 135 && mouse.y <= HEI + 195) {
         audioNum++;
         if(audioNum >= files.length) {
           audioNum = 0;
@@ -731,7 +747,7 @@ function addEventListener() {
         if(audioPlaing) audio.play();
         else audio.pause();
       }
-      if(mouse.click.x >= WID - 240 && mouse.click.x <= WID + 240 && mouse.click.y >= HEI + 45 && mouse.click.y <= HEI + 130) {
+      if(mouse.x >= WID - 240 && mouse.x <= WID + 240 && mouse.y >= HEI + 45 && mouse.y <= HEI + 130) {
         lyricsScrollFrom.move = true;
       }
     }
@@ -1317,6 +1333,17 @@ function audioAnimate() {
     if(e.title === audioTitle) lyricsValue = i;
   })
 
+  if(lyricsScrollMove !== 0) {
+    lyricsScroll += Math.floor(lyricsScrollMove);
+    if(lyricsScrollMove > 0) lyricsScrollMove -= 0.5;
+    if(lyricsScrollMove < 0) lyricsScrollMove += 0.5;
+    if(lyricsScrollMove < 0.5 && lyricsScrollMove > -0.5) lyricsScrollMove = 0;
+    if(lyricsScroll > 0) lyricsScroll = 0;
+    if(lyricsScroll < - lyricsScrollFrom.size + 47) {
+      lyricsScroll = - lyricsScrollFrom.size + 47;
+    }
+  }
+
   lyricsScrollFrom.size = 0;
   lyrics.clearRect(0, 0, lyricsC.width, lyricsC.height);
   if(lyricsValue !== false) {
@@ -1334,7 +1361,7 @@ function audioAnimate() {
           nextIdx++;
           if(typeof(lyricsFiles[lyricsValue].lyrics[i + nextIdx]) === "undefined") {
             nextTime = audio.duration;
-            console.log(i + nextIdx);
+            // console.log(i + nextIdx);
           }else {
             nextTime = lyricsFiles[lyricsValue].lyrics[i + nextIdx].time;
           }
@@ -1343,7 +1370,7 @@ function audioAnimate() {
           lyrics.fillStyle = particle.color;
           if(playLyrics !== i && (i === 0 || t.time !== lyricsFiles[lyricsValue].lyrics[i - 1].time)) {
             lyricsScrollFrom.scroll = - lyricsScrollFrom.size;
-            if(lyricsScrollFrom.scroll - 50 - ((nextIdx - 1) * 23) < lyricsScroll && lyricsScrollFrom.his + 110 > lyricsScroll) lyricsScroll = lyricsScrollFrom.scroll;
+            if(lyricsScrollFrom.scroll - 50 - ((nextIdx - 1) * 23) < lyricsScroll && lyricsScrollFrom.his + 110 > lyricsScroll && !mouse.lyricsDown) lyricsScroll = lyricsScrollFrom.scroll;
             playLyrics = i;
             lyricsScrollFrom.his = lyricsScrollFrom.scroll;
           }
@@ -1354,7 +1381,7 @@ function audioAnimate() {
         lyrics.fillStyle = particle.color;
         if(playLyrics !== i && t.time !== lyricsFiles[lyricsValue].lyrics[i - 1].time) {
           lyricsScrollFrom.scroll = - lyricsScrollFrom.size;
-          if(lyricsScrollFrom.scroll - 50 < lyricsScroll && lyricsScrollFrom.his + 110 > lyricsScroll) lyricsScroll = lyricsScrollFrom.scroll;
+          if(lyricsScrollFrom.scroll - 50 < lyricsScroll && lyricsScrollFrom.his + 110 > lyricsScroll && !mouse.lyricsDown) lyricsScroll = lyricsScrollFrom.scroll;
           playLyrics = i;
           lyricsScrollFrom.his = lyricsScrollFrom.scroll;
         }
