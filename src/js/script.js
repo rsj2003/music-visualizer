@@ -239,34 +239,35 @@ function addEventListener() {
           audioShuffleList.push(audioShuffleList.length);
         }
       }
-      const listItem = $list.querySelectorAll(".item");
-      listItem.forEach(el => el.remove());
+      // const listItem = $list.querySelectorAll(".item");
+      // listItem.forEach(el => el.remove());
+      $list.innerHTML = "";
       files.forEach(music => {
-        const $item = document.createElement("li");
-        const $drag = document.createElement("div");
-        const $musicData = document.createElement("div");
-        const $delete = document.createElement("div");
+        // const $item = document.createElement("li");
+        // const $drag = document.createElement("div");
+        // const $musicData = document.createElement("div");
+        // const $delete = document.createElement("div");
 
-        $item.classList.add("item");
-        $drag.classList.add("drag");
-        $musicData.classList.add("musicData");
-        $delete.classList.add("delete");
+        // $item.classList.add("item");
+        // $drag.classList.add("drag");
+        // $musicData.classList.add("musicData");
+        // $delete.classList.add("delete");
 
-        $musicData.innerText = music.name;
-        $delete.innerText = "&Cross;";
+        // $musicData.innerText = music.name;
+        // $delete.innerText = "&Cross;";
         
-        $item.append($drag);
-        $item.append($musicData);
-        $item.append($delete);
+        // $item.append($drag);
+        // $item.append($musicData);
+        // $item.append($delete);
 
-        $list.append($item);
+        // $list.append($item);
 
-        // $list.innerHTML += 
-        // `<li class="item">
-        //   <div class="drag"></div>
-        //   <div class="musicData">${music.name}</div>
-        //   <div class="delete">&Cross;</div>
-        // </li>`;
+        $list.innerHTML += 
+        `<li class="item">
+          <div class="drag"></div>
+          <div class="musicData">${music.name}</div>
+          <div class="delete">&Cross;</div>
+        </li>`;
       })
       $list.style.height = `${$list.childNodes.length * 42}px`;
     }
