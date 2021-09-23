@@ -636,7 +636,7 @@ function addEventListener() {
       $musicList.style.left = `${mouse.x - musicList.x}px`;
       $musicList.style.top = `${mouse.y - musicList.y}px`;
     }
-    if(mouse.down && Math.random() > 0.5) {
+    if(mouse.down && Math.random() > 0.5 && !invisible.particle) {
       let x = mouse.x + Math.random() * 20 - 10;
       let y = mouse.y + Math.random() * 20 - 10;
       let size = Math.random() * 5 + 2;
@@ -1204,7 +1204,7 @@ function audioAnimate() {
       avr += dataArray[i];
     }
     avr /= bufferLength;
-    if(avr > 0.1) {
+    if(avr > 0.1 && !invisible.particle) {
       let push = Math.round(Math.random() * (256 / avr));
       if(push === 0) particleList.push({size: avr / 8, x: x, y: y, step: Math.random() * 360, alpha: 1});
     }
