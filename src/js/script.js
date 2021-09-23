@@ -73,50 +73,50 @@ let radius = 300;
 let minRadius = 300;
 let rotate = 180;
 let audioNum = 0;
-let audioLoop = localStorage.getItem("loop") ?? false;
+let audioLoop = localStorage.getItem("loop") === null ? false : localStorage.getItem("loop");
 let audioTitle = "Unselected";
 let audioTitleX = 0;
 let audioTitleXTime = 0;
 let audioTitleWidth = 0;
 let audioLyricsWidth = 0;
-let audioShuffle = localStorage.getItem("shuffle") ?? false;
+let audioShuffle = localStorage.getItem("shuffle") === null ? false : localStorage.getItem("shuffle");
 let audioShuffleList = new Array();
 let lyricsScroll = 0;
 let lyricsScrollFrom = {scroll: 0, move: false, size: 0, his: 0};
 let lyricsScrollMove = 0;
 let playLyrics;
 let lyricsValue = false;
-let playtimeDecimal = localStorage.getItem("playtimeDecimal") ?? false;
+let playtimeDecimal = localStorage.getItem("playtimeDecimal") === null ? false : localStorage.getItem("playtimeDecimal");
 
 background.hue = 0;
-background.type = localStorage.getItem("backgroundType") ?? "hsl";
-background.saturation = Number(localStorage.getItem("backgroundSaturation") ?? 100);
-background.lightness = Number(localStorage.getItem("backgroundLightness") ?? 75);
-background.hex = localStorage.getItem("backgroundHex") ?? "#666666";
-background.gradient = {boolean: localStorage.getItem("backgroundGradient") ?? false, first: Number(localStorage.getItem("backgroundGradientFirst") ?? 50), last: Number(localStorage.getItem("backgroundGradientLast") ?? 100)};
-background.gradient.hue = Number(localStorage.getItem("backgroundGradientHue") ?? 180);
-background.gradient.saturation = Number(localStorage.getItem("backgroundGradientSaturation") ?? 100);
-background.gradient.lightness = Number(localStorage.getItem("backgroundGradientLightness") ?? 75);
-background.conversion = Number(localStorage.getItem("backgroundConversion") ?? 0.1);
-background.hueStep = Number(localStorage.getItem("backgroundHueStep") ?? 0);
+background.type = localStorage.getItem("backgroundType") === null ? "hsl" : localStorage.getItem("backgroundType");
+background.saturation = Number(localStorage.getItem("backgroundSaturation") === null ? 100 : localStorage.getItem("backgroundSaturation"));
+background.lightness = Number(localStorage.getItem("backgroundLightness") === null ? 75 : localStorage.getItem("backgroundLightness"));
+background.hex = localStorage.getItem("backgroundHex") === null ? "#666666" : localStorage.getItem("backgroundHex");
+background.gradient = {boolean: localStorage.getItem("backgroundGradient") === null ? false : localStorage.getItem("backgroundGradient"), first: Number(localStorage.getItem("backgroundGradientFirst") === null ? 50 : localStorage.getItem("backgroundGradientFirst")), last: Number(localStorage.getItem("backgroundGradientLast") === null ? 100 : localStorage.getItem("backgroundGradientLast"))};
+background.gradient.hue = Number(localStorage.getItem("backgroundGradientHue") === null ? 180 : localStorage.getItem("backgroundGradientHue"));
+background.gradient.saturation = Number(localStorage.getItem("backgroundGradientSaturation") === null ? 100 : localStorage.getItem("backgroundGradientSaturation"));
+background.gradient.lightness = Number(localStorage.getItem("backgroundGradientLightness") === null ? 75 : localStorage.getItem("backgroundGradientLightness"));
+background.conversion = Number(localStorage.getItem("backgroundConversion") === null ? 0.1 : localStorage.getItem("backgroundConversion"));
+background.hueStep = Number(localStorage.getItem("backgroundHueStep") === null ? 0: localStorage.getItem("backgroundHueStep"));
 
 particle.hue = 0;
-particle.type = localStorage.getItem("particleType") ?? "hex";
-particle.saturation = Number(localStorage.getItem("particleSaturation") ?? 100);
-particle.lightness = Number(localStorage.getItem("particleLightness") ?? 75);
-particle.hex = localStorage.getItem("particleHex") ?? "#ffffff";
-particle.gradient = {boolean: localStorage.getItem("particleGradient") ?? false, first: Number(localStorage.getItem("particleGradientFirst") ?? 50), last: Number(localStorage.getItem("particleGradientLast") ?? 100)};
-particle.gradient.hue = Number(localStorage.getItem("particleGradientHue") ?? 180);
-particle.gradient.saturation = Number(localStorage.getItem("particleGradientSaturation") ?? 100);
-particle.gradient.lightness = Number(localStorage.getItem("particleGradientLightness") ?? 75);
-particle.conversion = Number(localStorage.getItem("particleConversion") ?? 0.1);
-particle.hueStep = Number(localStorage.getItem("particleHueStep") ?? 90);
+particle.type = localStorage.getItem("particleType") === null ? "hex" : localStorage.getItem("particleType");
+particle.saturation = Number(localStorage.getItem("particleSaturation") === null ? 100 : localStorage.getItem("particleSaturation"));
+particle.lightness = Number(localStorage.getItem("particleLightness") === null ? 75 : localStorage.getItem("particleLightness"));
+particle.hex = localStorage.getItem("particleHex") === null ? "#ffffff" : localStorage.getItem("particleHex");
+particle.gradient = {boolean: localStorage.getItem("particleGradient") === null ? false : localStorage.getItem("particleGradient"), first: Number(localStorage.getItem("particleGradientFirst") === null ? 50 : localStorage.getItem("particleGradientFirst")), last: Number(localStorage.getItem("particleGradientLast") === null ? 100 : localStorage.getItem("particleGradientLast"))};
+particle.gradient.hue = Number(localStorage.getItem("particleGradientHue") === null ? 180 : localStorage.getItem("particleGradientHue"));
+particle.gradient.saturation = Number(localStorage.getItem("particleGradientSaturation") === null ? 100 : localStorage.getItem("particleGradientSaturation"));
+particle.gradient.lightness = Number(localStorage.getItem("particleGradientLightness") === null ? 75 : localStorage.getItem("particleGradientLightness"));
+particle.conversion = Number(localStorage.getItem("particleConversion") === null ? 0.1 : localStorage.getItem("particleConversion"));
+particle.hueStep = Number(localStorage.getItem("particleHueStep") === null ? 90 : localStorage.getItem("particleHueStep"));
 particle.color = "";
 particle.colorTransA = "";
 particle.colorTransB = "";
 
-bgImage.type = localStorage.getItem("backgroundCover") ?? "cover";
-bgImage.alpha = Number(localStorage.getItem("backgroundAlpha") ?? 1);
+bgImage.type = localStorage.getItem("backgroundCover") === null ? "cover" : localStorage.getItem("backgroundCover");
+bgImage.alpha = Number(localStorage.getItem("backgroundAlpha") === null ? 1 : localStorage.getItem("backgroundAlpha"));
 
 
 if(audioLoop === "true") audioLoop = true;
@@ -172,7 +172,7 @@ function init() {
   gCtx.fillRect(0, 0, WIDTH, HEIGHT);
   vCtx.translate(WIDTH / 2, HEIGHT / 2);
 
-  audio.volume = localStorage.getItem("volume") ?? 0.5;
+  audio.volume = localStorage.getItem("volume") === null ? 0.5 : localStorage.getItem("volume");
 
   setTimeout(e => {
     $alert.style.transition = "2s";
@@ -495,9 +495,7 @@ function addEventListener() {
   })
 
   document.addEventListener("mousedown", e => {
-    if(e.target.tagName !== "INPUT") {
-      e.preventDefault();
-    }
+    e.preventDefault();
     if(e.button !== 0) {
       return false;
     };
