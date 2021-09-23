@@ -495,7 +495,9 @@ function addEventListener() {
   })
 
   document.addEventListener("mousedown", e => {
-    e.preventDefault();
+    if(e.target.tagName !== "INPUT") {
+      e.preventDefault();
+    }
     if(e.button !== 0) {
       return false;
     };
