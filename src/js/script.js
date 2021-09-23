@@ -54,6 +54,8 @@ const $hslGradientLightness = document.getElementById("hslGradientLightness");
 const $backgroundAlpha = document.getElementById("backgroundAlpha");
 const $backgroundCover = document.getElementById("backgroundCover");
 const $playtimeDecimal = document.getElementById("playtimeDecimal");
+const $backgroundInvisible = document.getElementById("backgroundInvisible");
+const $particleInvisible = document.getElementById("particleInvisible");
 
 // audio animation
 let analyser;
@@ -87,6 +89,7 @@ let lyricsScrollMove = 0;
 let playLyrics;
 let lyricsValue = false;
 let playtimeDecimal = localStorage.getItem("playtimeDecimal") === null ? false : localStorage.getItem("playtimeDecimal");
+let invisible = localStorage.getItem("itemInvisible") === null ? {background: false, particle: false} : JSON.parse(localStorage.getItem("itemInvisible"));
 
 background.hue = 0;
 background.type = localStorage.getItem("backgroundType") === null ? "hsl" : localStorage.getItem("backgroundType");
@@ -140,6 +143,9 @@ let particleList = new Array();
 let musicListMove = {idx: 0, mouseY: 0, target: ""};
 let interval;
 let shift = false;
+
+$backgroundInvisible.checked = !invisible.background;
+$particleInvisible.checked = !invisible.particle;
 
 // svg
 let repeat = new Image();
@@ -353,6 +359,14 @@ function addEventListener() {
         playtimeDecimal = target.checked;
         localStorage.setItem(`playtimeDecimal`, playtimeDecimal);
         break;
+    }
+    if(target === $backgroundInvisible) {
+      invisible.background = !target.checked;
+      localStorage.setItem("itemInvisible", JSON.stringify(invisible));
+    }
+    if(target === $particleInvisible) {
+      invisible.particle = !target.checked;
+      localStorage.setItem("itemInvisible", JSON.stringify(invisible));
     }
   })
 
@@ -1099,29 +1113,31 @@ function audioAnimate() {
   }
   audioTitleWidth = title.measureText(audioTitle).width;
 
-  if(background.type === "hsl") {
-    if(background.gradient.boolean) {
-      let grd;
-      let per = HEIGHT / 100;
-      let hue = background.hue + background.gradient.hue + background.hueStep;
-      if(background.gradient > 360) background.gradient -= background.gradient - (background.gradient % 360);
-      grd = ctx.createLinearGradient(0, per * background.gradient.first, 0, per * background.gradient.last);
-      grd.addColorStop(0,`hsl(${background.hue + background.hueStep}, ${background.saturation}%, ${background.lightness}%)`);
-      grd.addColorStop(1,`hsl(${hue}, ${background.gradient.saturation}%, ${background.gradient.lightness}%)`);
-      ctx.fillStyle = grd;
+  if(!invisible.background) {
+    if(background.type === "hsl") {
+      if(background.gradient.boolean) {
+        let grd;
+        let per = HEIGHT / 100;
+        let hue = background.hue + background.gradient.hue + background.hueStep;
+        if(background.gradient > 360) background.gradient -= background.gradient - (background.gradient % 360);
+        grd = ctx.createLinearGradient(0, per * background.gradient.first, 0, per * background.gradient.last);
+        grd.addColorStop(0,`hsl(${background.hue + background.hueStep}, ${background.saturation}%, ${background.lightness}%)`);
+        grd.addColorStop(1,`hsl(${hue}, ${background.gradient.saturation}%, ${background.gradient.lightness}%)`);
+        ctx.fillStyle = grd;
+      }else {
+        ctx.fillStyle = `hsl(${background.hue + background.hueStep}, ${background.saturation}%, ${background.lightness}%)`;
+      }
     }else {
-      ctx.fillStyle = `hsl(${background.hue + background.hueStep}, ${background.saturation}%, ${background.lightness}%)`;
+      ctx.fillStyle = background.hex;
     }
-  }else {
-    ctx.fillStyle = background.hex;
+    background.hue += background.conversion;
+    if(background.hue > 360) background.hue -= background.hue - (background.hue % 360);
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
   }
-  background.hue += background.conversion;
-  if(background.hue > 360) background.hue -= background.hue - (background.hue % 360);
-  ctx.fillRect(0, 0, WIDTH, HEIGHT);
   vCtx.translate(WIDTH / 2, HEIGHT / 2);
   vCtx.rotate(180 * Math.PI / 180);
 
-  if(bgImage.img.src !== "") {
+  if(bgImage.img.src !== "" && !invisible.background) {
     let bgWidth = bgImage.img.width;
     let bgHeight = bgImage.img.height;
     let w = bgWidth / backgroundC.width;
@@ -1217,27 +1233,29 @@ function audioAnimate() {
     vCtx.fillRect(- barWidth / 2, radius/* - barHeight / 2*/, barWidth, barHeight);
   }
 
-  let removeList = new Array();
-  particleList.forEach((i, idx) => {
-    if(i.size < 0.1) removeList.unshift(idx);
-    else if(i.alpha < 0) removeList.unshift(idx);
-    else {
-      i.y -= 2;
-      i.size -= 0.03;
-      i.alpha -= 0.002;
-      i.step += 2;
-      // pCtx.fillStyle = `rgba(255, 255, 255, ${i.alpha})`;
-      if(particle.type === "hsl") pCtx.fillStyle = `${particle.particleColor}${i.alpha})`;
+  if(!invisible.particle) {
+    let removeList = new Array();
+    particleList.forEach((i, idx) => {
+      if(i.size < 0.1) removeList.unshift(idx);
+      else if(i.alpha < 0) removeList.unshift(idx);
       else {
-        let hexAlpha = Math.round(i.alpha * 255).toString(16);
-        pCtx.fillStyle = `${particle.particleColor}${hexAlpha}`
+        i.y -= 2;
+        i.size -= 0.03;
+        i.alpha -= 0.002;
+        i.step += 2;
+        // pCtx.fillStyle = `rgba(255, 255, 255, ${i.alpha})`;
+        if(particle.type === "hsl") pCtx.fillStyle = `${particle.particleColor}${i.alpha})`;
+        else {
+          let hexAlpha = Math.round(i.alpha * 255).toString(16);
+          pCtx.fillStyle = `${particle.particleColor}${hexAlpha}`
+        }
+        pCtx.arc(i.x + Math.cos(i.step * Math.PI / 180) * i.size, i.y, i.size, 0, Math.PI * 2);
+        pCtx.fill();
+        pCtx.beginPath();
       }
-      pCtx.arc(i.x + Math.cos(i.step * Math.PI / 180) * i.size, i.y, i.size, 0, Math.PI * 2);
-      pCtx.fill();
-      pCtx.beginPath();
-    }
-  })
-  removeList.forEach(i => particleList.splice(i, 1));
+    })
+    removeList.forEach(i => particleList.splice(i, 1));
+  }
 
   pCtx.strokeStyle = particle.color;
   pCtx.lineWidth = 10;
